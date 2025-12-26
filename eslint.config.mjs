@@ -14,6 +14,7 @@ export default defineConfig(
             // 'tests/',
             // '*.spec.ts',
             '.github',
+            'jest.config.js',
         ],
     },
     {
