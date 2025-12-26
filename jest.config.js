@@ -5,8 +5,17 @@ const tsJestTransformCfg = createDefaultPreset().transform;
 /** @type {import("jest").Config} **/
 export default {
     testEnvironment: 'node',
+    extensionsToTreatAsEsm: ['.ts'],
     transform: {
-        ...tsJestTransformCfg,
+        '^.+\\.tsx?$': [
+            'ts-jest',
+            {
+                useESM: true,
+                tsconfig: {
+                    module: 'esnext',
+                },
+            },
+        ],
     },
     verbose: true,
 };
