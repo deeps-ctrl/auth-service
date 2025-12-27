@@ -113,6 +113,24 @@ describe('POST /auth/register', () => {
             expect(users[0]).toHaveProperty('role');
             expect(users[0].role).toBe(Roles.CUSTOMER);
         });
+
+        it('should store the hashed password in the database', async () => {
+            //Arrange
+            const userData = {
+                firstName: 'Deepanshu',
+                lastName: 'Kumar',
+                email: 'deepanshu.kumar@gmail.com',
+                password: 'secret',
+            };
+            //Act
+            await request(app).post('/auth/register').send(userData);
+            //Assert
+            const userRepository = connection.getRepository(User);
+            const users = await userRepository.find();
+            expect(users[0].password).not.toBe(userData.password);
+            expect(users[0].password).toHaveLength(60); // hashed password lenght is always 60 characters long
+            expect(users[0].password).toMatch(/^\$2b\$\d+/); // Match it that exact this format hash is being generated or not
+        });
     });
 
     describe('', () => {});
