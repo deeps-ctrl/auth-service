@@ -4,6 +4,7 @@ import { DataSource } from 'typeorm';
 import { AppDataSource } from '../../src/config/data-source';
 import { truncateTables } from '../utils';
 import { User } from '../../src/entity/User';
+import { Roles } from '../../src/constants';
 
 describe('POST /auth/register', () => {
     let connection: DataSource;
@@ -11,9 +12,12 @@ describe('POST /auth/register', () => {
     beforeAll(async () => {
         connection = await AppDataSource.initialize();
     });
+
     //Before each test we need to clean the database
     beforeEach(async () => {
         // Database truncate
+        await connection.dropDatabase();
+        await connection.synchronize();
         await truncateTables(connection);
     });
 
@@ -91,6 +95,23 @@ describe('POST /auth/register', () => {
                 .send(userData);
             //Assert
             expect(response.body).toHaveProperty('id');
+        });
+
+        it('should assign customer role', async () => {
+            //Arrange
+            const userData = {
+                firstName: 'Deepanshu',
+                lastName: 'Kumar',
+                email: 'deepanshu.kumar@gmail.com',
+                password: 'secret',
+            };
+            //Act
+            await request(app).post('/auth/register').send(userData);
+            //Assert
+            const userRepository = connection.getRepository(User);
+            const users = await userRepository.find();
+            expect(users[0]).toHaveProperty('role');
+            expect(users[0].role).toBe(Roles.CUSTOMER);
         });
     });
 
