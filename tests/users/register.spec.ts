@@ -171,6 +171,65 @@ describe('POST /auth/register', () => {
             expect(users).toHaveLength(0);
         });
 
+        it('should return 400 status code if firstName is missing', async () => {
+            //Arrange
+            const userData = {
+                firstName: '',
+                lastName: 'Kumar',
+                email: 'deepanshu.kumar@gmail.com',
+                password: 'secret',
+            };
+            //Act
+            const response = await request(app)
+                .post('/auth/register')
+                .send(userData);
+            //Assert
+            expect(response.statusCode).toBe(400);
+            const userRepository = connection.getRepository(User);
+            const users = await userRepository.find();
+            expect(users).toHaveLength(0);
+        });
+
+        it('should return 400 status code if lastName is missing', async () => {
+            //Arange
+            const userData = {
+                firstName: 'Deepanshu',
+                lastName: '',
+                email: 'deepanshu.kumar@fareportal.com',
+                password: 'secret',
+            };
+            //Act
+            const response = await request(app)
+                .post('/auth/register')
+                .send(userData);
+            //Assert
+            expect(response.statusCode).toBe(400);
+            const userRepository = connection.getRepository(User);
+            const users = await userRepository.find();
+            expect(users).toHaveLength(0);
+        });
+
+        it('should return 400 status code if password is missing', async () => {
+            //Arange
+            const userData = {
+                firstName: 'Deepanshu',
+                lastName: 'Kumar',
+                email: 'deepanshu.kumar@fareportal.com',
+                password: '',
+            };
+            //Act
+            const response = await request(app)
+                .post('/auth/register')
+                .send(userData);
+            //Assert
+            expect(response.statusCode).toBe(400);
+            const userRepository = connection.getRepository(User);
+            const users = await userRepository.find();
+            expect(users).toHaveLength(0);
+        });
+    });
+
+    describe('Fields are not in proper format', () => {
         it('should trim the email fields', async () => {
             //Arange
             const userData = {
@@ -186,6 +245,67 @@ describe('POST /auth/register', () => {
             const users = await userRepository.find();
             const user = users[0];
             expect(user.email).toBe(userData.email.trim());
+        });
+
+        it('should return 400 status code if email is not a valid email', async () => {
+            //Arange
+            const userData = {
+                firstName: 'Deepanshu',
+                lastName: 'Kumar',
+                email: 'deepanshu.k',
+                password: 'secret',
+            };
+            //Act
+            const response = await request(app)
+                .post('/auth/register')
+                .send(userData);
+            //Assert
+            expect(response.statusCode).toBe(400);
+            const userRepository = connection.getRepository(User);
+            const users = await userRepository.find();
+            expect(users).toHaveLength(0);
+        });
+
+        it('should return 400 status code if password is less than 6 chars', async () => {
+            //Arange
+            const userData = {
+                firstName: 'Deepanshu',
+                lastName: 'Kumar',
+                email: 'deepanshu.kumar@gmail.com',
+                password: 'secre',
+            };
+            //Act
+            const response = await request(app)
+                .post('/auth/register')
+                .send(userData);
+            //Assert
+            expect(response.statusCode).toBe(400);
+            const userRepository = connection.getRepository(User);
+            const users = await userRepository.find();
+            expect(users).toHaveLength(0);
+        });
+
+        it('should return an array of error message if email is missing', async () => {
+            //Arange
+            const userData = {
+                firstName: 'Deepanshu',
+                lastName: 'Kumar',
+                email: '',
+                password: 'secret',
+            };
+            //Act
+            const response = await request(app)
+                .post('/auth/register')
+                .send(userData);
+            //Assert
+            expect(response.statusCode).toBe(400);
+            expect(response.body).toHaveProperty('errors');
+            expect(
+                (response.body as Record<string, string>).errors.length,
+            ).toBeGreaterThan(0);
+            const userRepository = connection.getRepository(User);
+            const users = await userRepository.find();
+            expect(users).toHaveLength(0);
         });
     });
 });
