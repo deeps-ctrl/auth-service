@@ -2,7 +2,7 @@ import request from 'supertest';
 import app from '../../src/app';
 import { DataSource } from 'typeorm';
 import { AppDataSource } from '../../src/config/data-source';
-import { truncateTables } from '../utils';
+import { isJwt, truncateTables } from '../utils';
 import { User } from '../../src/entity/User';
 import { Roles } from '../../src/constants';
 
@@ -146,8 +146,46 @@ describe('POST /auth/register', () => {
             const response = await request(app)
                 .post('/auth/register')
                 .send(userData);
+            const users = await userRepository.find();
             //Assert
             expect(response.statusCode).toBe(400);
+            expect(users).toHaveLength(1);
+        });
+
+        it('should return the access token and refresh token inside a cookie', async () => {
+            //Arrange
+            const userData = {
+                firstName: 'Deepanshu',
+                lastName: 'Kumar',
+                email: 'deepanshu.kumar@gmail.com',
+                password: 'secret',
+            };
+            //Act
+            const response = await request(app)
+                .post('/auth/register')
+                .send(userData);
+
+            //Assert
+            interface Headers {
+                ['set-cookie']: string[];
+            }
+            let accessToken = null;
+            let refreshToken = null;
+            const cookies =
+                (response.headers as unknown as Headers)['set-cookie'] || [];
+            cookies.forEach((cookie) => {
+                if (cookie.startsWith('accessToken=')) {
+                    accessToken = cookie.split(';')[0].split('=')[1];
+                }
+
+                if (cookie.startsWith('refreshToken=')) {
+                    refreshToken = cookie.split(';')[0].split('=')[1];
+                }
+            });
+            expect(accessToken).not.toBeNull();
+            expect(refreshToken).not.toBeNull();
+            expect(isJwt(accessToken)).toBeTruthy();
+            expect(isJwt(refreshToken)).toBeTruthy();
         });
     });
 
